@@ -70,9 +70,10 @@ CAPTURE_EFFECT
 capture effect (power collision) or not
 
 INTER_SF_INTERFERENCE
+
 inter-sf interference
 
-info_mode
+INFO_MODE
 
 information mode to simulate
 
