@@ -10,7 +10,6 @@ Utilities (:mod:`lora.bsFunctions`)
 """    
 import os
 import random
-import numpy as np
 from os.path import join
 from .loratools import airtime
 # Transmit
@@ -121,16 +120,33 @@ def saveProb(env, nodeDict, fname, simu_dir):
     -------
     """
     while True:
-        yield env.timeout(360000)
+        yield env.timeout(1e3 * 360000)
         # write prob to file
         for nodeid in nodeDict.keys():
              if nodeDict[nodeid].node_mode == "SMART":
-                filename = join(simu_dir, str(fname) + '_id_' + str(nodeid) + '.csv')
+                filename = join(simu_dir, str('prob_'+ fname) + '_id_' + str(nodeid) + '.csv')
                 save = str(list(nodeDict[nodeid].prob.values()))[1:-1]
                 if os.path.isfile(filename):
-                    res = "\n" + save #str(list(nodeDict[nodeid].prob.values()))
+                    res = "\n" + save
                 else:
                     res = save
                 with open(filename, "a") as myfile:
                     myfile.write(res)
                 myfile.close()
+
+        # write packet reception ratio to file
+        nTransmitted = 0
+        nRecvd = 0
+        PacketReceptionRatio = 0
+        for nodeid in nodeDict.keys():
+            nTransmitted += nodeDict[nodeid].packetsTransmitted
+            nRecvd += nodeDict[nodeid].packetsSuccessful
+        PacketReceptionRatio = nRecvd/nTransmitted
+        filename = join(simu_dir, str('ratio_'+ fname) + '.csv')
+        if os.path.isfile(filename):
+            res = "\n" + str(PacketReceptionRatio)
+        else:
+            res = str(PacketReceptionRatio)
+        with open(filename, "a") as myfile:
+            myfile.write(res)
+        myfile.close()

@@ -1,6 +1,7 @@
 import numpy as np
 from .loratools import getDistanceFromPower
 from .packet import myPacket
+from os.path import join
 
 class myNode():
     """ LPWAN Simulator: node
@@ -19,12 +20,12 @@ class myNode():
     \param [IN] nSF: number of spreading factors
     
     """
-    def __init__(self, nodeid, position, transmitParams, sfSet, freqSet, powSet, bsList,
-                 interferenceThreshold, logDistParams, sensi, node_mode, info_mode, horTime):
+    def __init__(self, nodeid, position, transmitParams, initial, sfSet, freqSet, powSet, bsList,
+                 interferenceThreshold, logDistParams, sensi, node_mode, info_mode, horTime, simu_dir, fname):
         self.nodeid = nodeid # id
         self.x, self.y = position # location
         if node_mode == 0:
-            self.node_mode = 'NORMAL_UNIFORM'
+            self.node_mode = 'NORMAL'
         else:
             self.node_mode = "SMART"
         
@@ -49,17 +50,20 @@ class myNode():
         
         self.setActions = [(self.sfSet[i], self.freqSet[j], self.powerSet[k]) for i in range(len(self.sfSet)) for j in range(len(self.freqSet)) for k in range(len(self.powerSet))]
         self.nrActions = len(self.setActions)
+        self.initial = initial
         
         # for reinforcement learning
         self.weight = {x: 1 for x in range(0, self.nrActions)}
-        prob = (1/self.nrActions) * np.ones(self.nrActions)
-        #prob = prob/sum(prob)         
+        if self.initial=="UNIFORM":
+            prob = (1/self.nrActions) * np.ones(self.nrActions)
+        else:
+        #if self.initial == "RANDOM":
+            prob = np.random.rand(self.nrActions)
+            prob = prob/sum(prob)
+        #else:
+        #    probDict = np.load(join(simu_dir, str('prob_'+ fname)))
+        #    prob = probDict[int(nodeid)]
         self.prob = {x: prob[x] for x in range(0, self.nrActions)} # probability
-        
-        # choose an action
-        #prob_temp = [self.prob[x] for x in self.prob]
-        #print(prob_temp)
-        #self.choosenAction = np.random.choice(self.nrActions, p=prob_temp)
 
         # learning rate
         self.learning_rate = np.minimum(1, np.sqrt((self.nrActions*np.log(self.nrActions))/((horTime)*(np.exp(1.0)-1)))) # best learning rate
@@ -187,7 +191,7 @@ class myNode():
             # update prob        
             for j in range(0, self.nrActions):
                 prob[j] = (1-self.learning_rate) * (weight[j]/sum(weight)) + (self.learning_rate/self.nrActions)
-        
+            
         # update dictionaries
         prob = np.array(prob)
         prob[prob<0.001] = 0 # trick: force the small value to 0 

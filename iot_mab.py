@@ -6,6 +6,7 @@ def main(args):
     nrNodes = int(args.nrNodes)
     nrIntNodes = int(args.nrIntNodes)
     nrBS = int(args.nrBS)
+    initial = str(args.initial)
     radius = int(args.radius)
     avgSendTime = int(args.AvgSendTime)
     horTime = int(args.horizonTime)
@@ -21,12 +22,14 @@ def main(args):
     
     # print simulation parameters
     print("\n=================================================")
-    print_params(nrNodes, nrIntNodes, nrBS, radius, avgSendTime, horTime, packetLength, 
+    print_params(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packetLength, 
                 sfSet, freqSet, powSet, captureEffect, interSFInterference, info_mode)
-
+    
+    assert initial in ["UNIFORM", "RANDOM"], "Initial mode must be UNIFORM, RANDOM."
+    
     # running simulation
-    bsDict, nodeDict = sim(nrNodes, nrIntNodes, nrBS, radius, avgSendTime, horTime, packetLength, 
-    sfSet, freqSet, powSet, captureEffect, interSFInterference, info_mode, logdir, exp_name)
+    bsDict, nodeDict = sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime,
+    packetLength, sfSet, freqSet, powSet, captureEffect, interSFInterference, info_mode, logdir, exp_name)
 
     return bsDict, nodeDict
 
@@ -34,4 +37,4 @@ if __name__ == '__main__':
     # import agruments
     args = get_args()
     # print args and run simulation
-    bsDict, nodeDict = main(args)
+    main(args)

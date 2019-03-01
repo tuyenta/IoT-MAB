@@ -25,39 +25,41 @@ You can install the required packages using the provided requirements.txt file:
 ### Synopsis
 
 ```python
-python3 IoT_MAB.py <nrNodes> <nrIntNodes> <nrBS> <radius> <AvgSendTime> <horizonTime>
+python3 IoT_MAB.py <nrNodes> <nrIntNodes> <nrBS> <initial> <radius> <AvgSendTime> <horizonTime>
 <packetLength> <freqSet> <sfSet> <powerSet> <captureEffect> <interSFInterference> <infoMode> <logdir> <exp_name>
 ```
 
 Example:
 
 ```python
-python3 IoT_MAB.py --nrNodes 5 --nrIntNodes 5 --nrBS 1 --radius 2000 --AvgSendTime 360000 
---horizonTime 10  --packetLength 50 --freqSet '867300' --sfSet '7 8'  --powerSet "14"
---captureEffect 1  --interSFInterference 1 --infoMode NO --logdir logs --exp_name exp1
+python3 IoT_MAB.py --nrNodes 5 --nrIntNodes 5 --nrBS 1 --initial UNIFORM --radius 2000 --AvgSendTime 360000 --horizonTime 10  --packetLength 50 --freqSet '867300' --sfSet '7 8'  --powerSet "14"  --captureEffect 1  --interSFInterference 1 --infoMode NO --logdir logs --exp_name exp1
 ```
 ### Description
-NODES
+nrNodes
 
 number of nodes to simulate.
 
-nrIntNODES
+nrIntNodes
 
 number of smart nodes to simulate.
 
-BS
+nrBS
 
 number of base station.
 
-RADIUS
+initial
+
+initial probability for learning process
+
+radius
 
 radius to simulate
 
-AVGSEND
+AvgSendTime
 
 average sending interval in milliseconds.
 
-horTime
+horizonTime
 
 time to simulate
 
@@ -65,29 +67,37 @@ packetLength
 
 length of packet to simulate
 
-SFSET
+sfSet
 
 set of SF to simulate
 
-FREQSET
+freqSet
 
 set of frequency to simulate
 
-POWSET
+powerSet
 
 set of power to simulate
 
-CAPTURE_EFFECT
+captureEffect
 
 capture effect (power collision) or not
 
-INTER_SF_INTERFERENCE
+interSFInterference
 
 inter-sf interference
 
-INFO_MODE
+infoMode
 
 information mode to simulate
+
+logdir
+
+name of folder to store simulations
+
+exp_name
+
+name of folder to store scenario
 
 ### Output
 

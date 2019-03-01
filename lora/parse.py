@@ -14,6 +14,7 @@ def get_args():
     parser.add_argument("--nrNodes", required=True, type=int)
     parser.add_argument("--nrIntNodes", required=True, type=int)
     parser.add_argument("--nrBS", required=True, type=int, default=1)
+    parser.add_argument("--initial", required=True, type=str)
     parser.add_argument("--radius", required=True, type=float, default=2)
     parser.add_argument("--AvgSendTime", required=True, type=int, default=6)
     parser.add_argument("--horizonTime", required=True, type=int, default=10**6)
