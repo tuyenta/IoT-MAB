@@ -11,7 +11,7 @@ $ pip install virtualenvwrapper
 $ export WORKON_HOME=~/.virtualenvs
 $ mkdir -p $WORKON_HOME
 $ source /usr/local/bin/virtualenvwrapper.sh
-$ mkvirtualenv -p python2 iot_mab
+$ mkvirtualenv -p python3 iot_mab
 ```
 
 You can install the required packages using the provided requirements.txt file:
@@ -23,7 +23,9 @@ You can install the required packages using the provided requirements.txt file:
 ## Usage
 
 ### Synopsis
-
+```python
+python3 IoT_MAB.py --nrNodes 5 --nrIntNodes 5 --nrBS 1 --radius 2000 --AvgSendTime 360000 --horizonTime 10  --packetLength 50 --freqSet '867300' --sfSet '7 8'  --powerSet "14"  --captureEffect 1  --interSFInterference 1 --infoMode NO --logdir logs --exp_name exp1
+```
 ### Description
 NODES
 
