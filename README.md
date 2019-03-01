@@ -1,7 +1,7 @@
 # IOT-MAB: Decentralized Intelligent Resource Allocation Approach for LoRaWAN Networks
 
 ## Introduction
-
+IoT-MAB is a discrete-event simulator based on SimPy for simulating intelligent distributed resource allocation in LoRa networks and to analyse scalability.
 ## Installation
 It is recommend to use virtualenv to keep your Python environment isolated, together with virtualenvwrapper to make working with virtual environments much more pleasant, e.g.:
 
