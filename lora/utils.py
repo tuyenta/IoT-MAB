@@ -87,8 +87,8 @@ def sim(nrNodes, nrIntNodes, nrBS, radius, avgSendTime, horTime, packetLength, s
                                           [0,          0         , 0,             dBmTomW(6), 0,          0         ],
                                           [0,          0         , 0,             0,          dBmTomW(6), 0         ],
                                           [0,          0         , 0,             0,          0,          dBmTomW(6)]])
-else:
-    captureThreshold = 0 # threshold is 0
+    else:
+        captureThreshold = 0 # threshold is 0
         interactionMatrix = np.eye(len(sfSet), dtype=int)
 
     # Location generator
@@ -96,16 +96,17 @@ else:
     distMatrix, bestDist, bestSF, bestBW = getMaxTransmitDistance(sensi, maxPtx, logDistParams, phyParams)
     print ("Max range = {} at SF = {}, BW = {}".format(bestDist, bestSF, bestBW))
 
-# Generate base station and nodes
-np.random.seed(12345) # seed the random generator
+    # Generate base station and nodes
+    np.random.seed(12345) # seed the random generator
 
     # Place base-stations randomly
     simu_dir = join('logs', exp_name)
     #make folder
     if not exists(simu_dir):
         makedirs(simu_dir)
-file_1 = join(simu_dir, "bsList_bs" + str(nrBS) + "_nodes" + str(nrNodes) + ".npy")
-file_2 = join(simu_dir, "nodeList_bs"+ str(nrBS) + "_nodes" + str(nrNodes) + ".npy")
+
+    file_1 = join(simu_dir, "bsList_bs" + str(nrBS) + "_nodes" + str(nrNodes) + ".npy")
+    file_2 = join(simu_dir, "nodeList_bs"+ str(nrBS) + "_nodes" + str(nrNodes) + ".npy")
 
     if not os.path.exists(file_1):
         if not os.path.exists(file_2):
@@ -123,11 +124,11 @@ file_2 = join(simu_dir, "nodeList_bs"+ str(nrBS) + "_nodes" + str(nrNodes) + ".n
             # save to file
             np.save(file_1, BSLoc)
             np.save(file_2, nodeLoc)
-else:
-    # Load =location
-    print ("\t Load locations for {} base-stations and {} nodes".format(nrBS, nrNodes))
-    BSLoc = np.load(file_1)
-    nodeLoc = np.load(file_2)
+    else:
+        # Load =location
+        print ("\t Load locations for {} base-stations and {} nodes".format(nrBS, nrNodes))
+        BSLoc = np.load(file_1)
+        nodeLoc = np.load(file_2)
     
     # Simulation
     nTransmitted = 0
@@ -154,41 +155,43 @@ else:
     for elem in nodeList:
         node = myNode(int(elem[0]), (elem[1], elem[2]), elem[3:13], sfSet, freqSet, powSet, BSList, interferenceThreshold, logDistParams,
                       sensi, elem[13], info_mode, horTime)
-                      nodeDict[node.nodeid] = node
-                      env.process(transmitPacket(env, node, bsDict, logDistParams))
+        nodeDict[node.nodeid] = node
+        env.process(transmitPacket(env, node, bsDict, logDistParams))
 
-# compute traffic
-env.process(saveProb(env, nodeDict, fname, simu_dir))
-env.run(until=simtime)
+    # compute traffic
+    env.process(saveProb(env, nodeDict, fname, simu_dir))
+    env.run(until=simtime)
 
     # reception
     for nodeid, node in nodeDict.items():
         nTransmitted += node.packetsTransmitted
         nRecvd += node.packetsSuccessful
 
-# print results
-print ("================== Results ==================")
-print ("# Transmitted = {}".format(nTransmitted))
-print ("# Received = {}".format(nRecvd))
-print ("# Ratio = {}".format(nRecvd/nTransmitted))
+    # print results
+    print ("================== Results ==================")
+    print ("# Transmitted = {}".format(nTransmitted))
+    print ("# Received = {}".format(nRecvd))
+    print ("# Ratio = {}".format(nRecvd/nTransmitted))
 
     # Plotting - location
     #plotLocations(BSLoc, nodeLoc, grid[0], grid[1], bestDist, distMatrix)
     
+    # save and plot data
     # save and plot data
     setActions = [(sfSet[i], freqSet[j], powSet[k]) for i in range(len(sfSet)) for j in range(len(freqSet)) for k in range(len(powSet))]
     probDict = {}
     for nodeid in range(nrIntNodes):
         filename = join(simu_dir, str(fname) + '_id_' + str(nodeid) + '.csv')
         df = pd.read_csv(filename, delimiter=' ', header= None, index_col=False)
+        print(df)
         df = df.replace(',', '', regex=True).astype('float64').values
-        
+        print(df)
         fig, ax = plt.subplots(figsize=(8,5))
         for idx in range(df.shape[1]):
             ax.plot(df[:,idx], label = 'SF = {}, Freq={}, Power={}'.format(setActions[idx][0], setActions[idx][1], setActions[idx][2]))
             plt.xlabel("Horizon time")
             plt.ylabel("Probability")
-            ax.legend(loc='best')
+            ax.legend(loc='best')   
             plt.rcParams["font.family"] = "sans-serif"
             plt.rcParams["font.size"] = 16
             plt.close(fig)
@@ -196,7 +199,7 @@ print ("# Ratio = {}".format(nRecvd/nTransmitted))
         fig.savefig(join(simu_dir, str(fname) + '_id_' + str(nodeid) + '.png'))
         # probDict
         probDict[nodeid] = df[-1 , :]
-    # save probDict
+    # save probDict        
     np.save(join(simu_dir, str(fname)), probDict)
-
+    
     return(bsDict, nodeDict)

@@ -126,10 +126,11 @@ def saveProb(env, nodeDict, fname, simu_dir):
         for nodeid in nodeDict.keys():
              if nodeDict[nodeid].node_mode == "SMART":
                 filename = join(simu_dir, str(fname) + '_id_' + str(nodeid) + '.csv')
+                save = str(list(nodeDict[nodeid].prob.values()))[1:-1]
                 if os.path.isfile(filename):
-                    res = "\n" + str(nodeDict[nodeid].prob) #str(list(nodeDict[nodeid].prob.values()))
+                    res = "\n" + save #str(list(nodeDict[nodeid].prob.values()))
                 else:
-                    res = str(nodeDict[nodeid].prob)
+                    res = save
                 with open(filename, "a") as myfile:
                     myfile.write(res)
                 myfile.close()
