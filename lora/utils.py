@@ -176,6 +176,7 @@ print ("# Ratio = {}".format(nRecvd/nTransmitted))
     #plotLocations(BSLoc, nodeLoc, grid[0], grid[1], bestDist, distMatrix)
     
     # save and plot data
+    setActions = [(sfSet[i], freqSet[j], powSet[k]) for i in range(len(sfSet)) for j in range(len(freqSet)) for k in range(len(powSet))]
     probDict = {}
     for nodeid in range(nrIntNodes):
         filename = join(simu_dir, str(fname) + '_id_' + str(nodeid) + '.csv')
@@ -184,7 +185,7 @@ print ("# Ratio = {}".format(nRecvd/nTransmitted))
         
         fig, ax = plt.subplots(figsize=(8,5))
         for idx in range(df.shape[1]):
-            ax.plot(df[:,idx], label = 'SF = {}'.format(12-df.shape[1]+idx+1))
+            ax.plot(df[:,idx], label = 'SF = {}, Freq={}, Power={}'.format(setActions[idx][0], setActions[idx][1], setActions[idx][2]))
             plt.xlabel("Horizon time")
             plt.ylabel("Probability")
             ax.legend(loc='best')
