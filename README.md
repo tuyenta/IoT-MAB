@@ -33,8 +33,8 @@ Example:
 
 ```python
 python3 IoT_MAB.py --nrNodes 5 --nrIntNodes 5 --nrBS 1 --radius 2000 --AvgSendTime 360000 
---horizonTime 10  --packetLength 50 --freqSet '867300' --sfSet '7 8'  --powerSet "14"  --captureEffect 1  
---interSFInterference 1 --infoMode NO --logdir logs --exp_name exp1
+--horizonTime 10  --packetLength 50 --freqSet '867300' --sfSet '7 8'  --powerSet "14"
+--captureEffect 1  --interSFInterference 1 --infoMode NO --logdir logs --exp_name exp1
 ```
 ### Description
 NODES
