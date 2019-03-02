@@ -1,7 +1,8 @@
 # IOT-MAB: Decentralized Intelligent Resource Allocation Approach for LoRaWAN Networks
 
 ## Introduction
-IoT-MAB is a discrete-event simulator based on SimPy for simulating intelligent distributed resource allocation in LoRa networks and to analyse scalability.
+IoT-MAB is a discrete-event simulator based on SimPy for simulating intelligent distributed resource allocation in LoRa networks and to analyse scalability. We also combine the classed and functions for Physical layer of LoRA. 
+
 ## Installation
 It is recommend to use virtualenv to keep your Python environment isolated, together with virtualenvwrapper to make working with virtual environments much more pleasant, e.g.:
 
@@ -41,7 +42,7 @@ number of nodes to simulate.
 
 nrIntNodes
 
-number of smart nodes to simulate.
+number of smart nodes to simulate. nrIntNodes must be smaller than nrNodes
 
 nrBS
 
@@ -49,11 +50,11 @@ number of base station.
 
 initial
 
-initial probability for learning process
+initial probability for learning process, which is *UNIFORM* for uniform distribution or *RANDOM* for random distribution.
 
 radius
 
-radius to simulate
+radius to simulate in metre.
 
 AvgSendTime
 
@@ -61,44 +62,46 @@ average sending interval in milliseconds.
 
 horizonTime
 
-time to simulate
+number of iteration to simulate. The simulation time is **horizonTime x AvgSendTime**
 
 packetLength
 
-length of packet to simulate
+length of packet to simulate in bytes
 
 sfSet
 
-set of SF to simulate
+set of SF to simulate, must be between 7 and 12
 
 freqSet
 
-set of frequency to simulate
+set of frequency to simulate.
 
 powerSet
 
-set of power to simulate
+set of power to simulate.
 
 captureEffect
 
-capture effect (power collision) or not
+capture effect (power collision) or not.
 
 interSFInterference
 
-inter-sf interference
+inter-sf interference.
 
 infoMode
 
-information mode to simulate
+information mode to simulate.
 
 logdir
 
-name of folder to store simulations
+name of folder to store simulations.
 
 exp_name
 
-name of folder to store scenario
+name of folder to store scenario.
 
 ### Output
 
 The result of every simulation run will be appended to a file named prob..._X.csv, whereby prob..._X. The data file is then plotted into .png file by using matplotlib.
+
+## Changelogs

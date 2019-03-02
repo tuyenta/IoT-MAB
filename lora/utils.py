@@ -16,7 +16,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from .node import myNode
 from .bs import myBS
-from .bsFunctions import transmitPacket, cuckooClock, saveProb
+from .bsFunctions import transmitPacket, cuckooClock, saveProb, saveRatio, saveEnergy, saveTraffic
 from .loratools import dBmTomW, getMaxTransmitDistance, placeRandomlyInRange, placeRandomly
 from .plotting import plotLocations
 
@@ -49,6 +49,10 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
     ackLength = 8 # length of the ack
     maxPtx = max(powSet)
     
+    # traffic
+    lambda_i = (1/avgSendTime) # packet generation rate
+    lambda_e = ((nrNodes-nrIntNodes)/nrNodes) * lambda_i * np.random.rand(len(sfSet), len(freqSet))
+    
     # phy parameters (rdd, packetLength, preambleLength, syncLength, headerEnable, crc)
     phyParams = (1, packetLength, 8, 4.25, False, True)
 
@@ -80,6 +84,13 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
                 [dBmTomW(-15), dBmTomW(-15), dBmTomW(-15), dBmTomW(6), dBmTomW(-15), dBmTomW(-15)],
                 [dBmTomW(-17.5), dBmTomW(-17.5), dBmTomW(-17.5), dBmTomW(-17.5), dBmTomW(6), dBmTomW(-17.5)],
                 [dBmTomW(-20), dBmTomW(-20), dBmTomW(-20), dBmTomW(-20), dBmTomW(-20), dBmTomW(6)]])
+            # interactionMatrix = np.array([
+            #     [dBmTomW(6), dBmTomW(-16), dBmTomW(-18), dBmTomW(-19), dBmTomW(-19), dBmTomW(-20)],
+            #     [dBmTomW(-24), dBmTomW(6), dBmTomW(-20), dBmTomW(-22), dBmTomW(-22), dBmTomW(-22)],
+            #     [dBmTomW(-27), dBmTomW(-27), dBmTomW(6), dBmTomW(-23), dBmTomW(-25), dBmTomW(-25)],
+            #     [dBmTomW(-30), dBmTomW(-30), dBmTomW(-30), dBmTomW(6), dBmTomW(-26), dBmTomW(-28)],
+            #     [dBmTomW(-33), dBmTomW(-33), dBmTomW(-33), dBmTomW(-33), dBmTomW(6), dBmTomW(-29)],
+            #     [dBmTomW(-36), dBmTomW(-36), dBmTomW(-36), dBmTomW(-36), dBmTomW(-36), dBmTomW(6)]])
         else:
             interactionMatrix = np.array([
                 [dBmTomW(6), 0,          0,             0,          0,          0         ],
@@ -101,12 +112,12 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
     np.random.seed(12345) # seed the random generator
     
     # Place base-stations randomly
-    simu_dir = join('logs', exp_name)
+    simu_dir = join(logdir, exp_name)
     #make folder
     if not exists(simu_dir):
         makedirs(simu_dir)
-    file_1 = join(simu_dir, "bsList_bs" + str(nrBS) + "_nodes" + str(nrNodes) + ".npy")
-    file_2 = join(simu_dir, "nodeList_bs"+ str(nrBS) + "_nodes" + str(nrNodes) + ".npy")
+    file_1 = join(logdir, "bsList_bs" + str(nrBS) + "_nodes" + str(nrNodes) + ".npy")
+    file_2 = join(logdir, "nodeList_bs"+ str(nrBS) + "_nodes" + str(nrNodes) + ".npy")
     
     if not os.path.exists(file_1):
         if not os.path.exists(file_2):
@@ -160,16 +171,20 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
         nodeDict[node.nodeid] = node
         env.process(transmitPacket(env, node, bsDict, logDistParams))
     
-    # compute traffic
+    # save results
     env.process(saveProb(env, nodeDict, fname, simu_dir))
+    env.process(saveRatio(env, nodeDict, fname, simu_dir))
+    if len(powSet)>1:
+        env.process(saveEnergy(env, nodeDict, fname, simu_dir))
+    env.process(saveTraffic(env, nodeDict, fname, simu_dir, sfSet, freqSet, lambda_i, lambda_e))
+    
     env.run(until=simtime)
     
     # reception
-    for nodeid, node in nodeDict.items():
-        nTransmitted += node.packetsTransmitted
-        nRecvd += node.packetsSuccessful
+    nTransmitted = sum(node.packetsTransmitted for nodeid, node in nodeDict.items())
+    nRecvd = sum(node.packetsSuccessful for nodeid, node in nodeDict.items())
     PacketReceptionRatio = nRecvd/nTransmitted
-    
+
     # print results        
     print ("================== Results ==================")
     print ("# Transmitted = {}".format(nTransmitted))

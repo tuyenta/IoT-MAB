@@ -7,13 +7,13 @@ Created on Mon Feb 25 14:05:43 2019
 """
 from lora.utils import print_params, sim
 
-nrNodes = int(10)
+nrNodes = int(100)
 nrIntNodes = int(10)
 nrBS = int(1)
 initial = "RANDOM"
-radius = float(2000)
+radius = float(4500)
 avgSendTime = int(360000)
-horTime = int(100)
+horTime = int(2e6)
 packetLength = int(50)
 sfSet = [7, 8, 9, 10, 11, 12]
 freqSet = [867300]
@@ -23,8 +23,8 @@ interSFInterference = True
 info_mode = 'NO'
 
 #make folder
-exp_name = 'exp1'
-logdir = 'logs'
+exp_name = 'exp_8'
+logdir = 'log_2'
 
 
 # print simulation parameters

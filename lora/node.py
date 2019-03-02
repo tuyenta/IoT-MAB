@@ -54,19 +54,18 @@ class myNode():
         
         # for reinforcement learning
         self.weight = {x: 1 for x in range(0, self.nrActions)}
-        if self.initial=="UNIFORM":
-            prob = (1/self.nrActions) * np.ones(self.nrActions)
-        else:
-        #if self.initial == "RANDOM":
+        if self.initial=="RANDOM":
             prob = np.random.rand(self.nrActions)
-            prob = prob/sum(prob)
+            prob = prob/sum(prob)   
+        else:
+            prob = (1/self.nrActions) * np.ones(self.nrActions)      
         #else:
         #    probDict = np.load(join(simu_dir, str('prob_'+ fname)))
         #    prob = probDict[int(nodeid)]
         self.prob = {x: prob[x] for x in range(0, self.nrActions)} # probability
 
         # learning rate
-        self.learning_rate = np.minimum(1, np.sqrt((self.nrActions*np.log(self.nrActions))/((horTime)*(np.exp(1.0)-1)))) # best learning rate
+        self.learning_rate = np.minimum(1, np.sqrt((self.nrActions*np.log(self.nrActions))/((horTime)*(np.exp(1.0)-1))))
         
         # generate packet and ack
         self.packets = self.generatePacketsToBS(transmitParams, logDistParams)
@@ -150,7 +149,7 @@ class myNode():
         for i in range(6):
             if dist <= distMatrix[0, 0]:
                 minSF = 7
-            elif distMatrix[i, 0]<= dist < distMatrix[i+1, 0]:
+            elif distMatrix[i, 0 ]<= dist < distMatrix[i+1, 0]:
                 minSF = (i + 1) + 7
         tempSF = [sf for sf in sfSet if sf >= minSF]
         sfBuckets.extend(tempSF)
@@ -194,12 +193,12 @@ class myNode():
             
         # update dictionaries
         prob = np.array(prob)
-        prob[prob<0.001] = 0 # trick: force the small value to 0 
+        prob[prob<0.0001] = 0 # trick: force the small value (<1/10000) to 0 
         prob = prob/sum(prob) # normalize
 
         self.weight = {x: weight[x] for x in range(0, self.nrActions)} 
         self.prob = {x: prob[x] for x in range(0, self.nrActions)}
-    
+        
     def resetACK(self):
         """Reset ACK"""
         self.ack = {}

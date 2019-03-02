@@ -10,8 +10,9 @@ Utilities (:mod:`lora.bsFunctions`)
 """    
 import os
 import random
+import numpy as np
 from os.path import join
-from .loratools import airtime
+from .loratools import airtime, dBmTomW
 # Transmit
 def transmitPacket(env, node, bsDict, logDistParams):
     """ Transmit a packet from node to all BSs in the list.
@@ -105,7 +106,37 @@ def cuckooClock(env):
         print("Running {} kHrs".format(env.now/(1e3 * 3600000)))
 
 def saveProb(env, nodeDict, fname, simu_dir):
-    """ Save probabilities every 1e1 hours
+    """ Save probabilities every to file
+    Parameters
+    ----------
+    env : simpy environement
+        Simulation environment.
+    nodeDict:dict
+        list of nodes.
+    fname: string
+        file name structure
+    simu_dir: string
+        folder
+    Returns
+    -------
+    """
+    while True:
+        yield env.timeout(360000)
+        # write prob to file
+        for nodeid in nodeDict.keys():
+             if nodeDict[nodeid].node_mode == "SMART":
+                filename = join(simu_dir, str('prob_'+ fname) + '_id_' + str(nodeid) + '.csv')
+                save = str(list(nodeDict[nodeid].prob.values()))[1:-1]
+                if os.path.isfile(filename):
+                    res = "\n" + save
+                else:
+                    res = save
+                with open(filename, "a") as myfile:
+                    myfile.write(res)
+                myfile.close()
+
+def saveRatio(env, nodeDict, fname, simu_dir):
+    """ Save packet reception ratio to file
     Parameters
     ----------
     env : simpy environement
@@ -121,32 +152,98 @@ def saveProb(env, nodeDict, fname, simu_dir):
     """
     while True:
         yield env.timeout(1e3 * 360000)
-        # write prob to file
-        for nodeid in nodeDict.keys():
-             if nodeDict[nodeid].node_mode == "SMART":
-                filename = join(simu_dir, str('prob_'+ fname) + '_id_' + str(nodeid) + '.csv')
-                save = str(list(nodeDict[nodeid].prob.values()))[1:-1]
-                if os.path.isfile(filename):
-                    res = "\n" + save
-                else:
-                    res = save
-                with open(filename, "a") as myfile:
-                    myfile.write(res)
-                myfile.close()
-
         # write packet reception ratio to file
         nTransmitted = 0
         nRecvd = 0
         PacketReceptionRatio = 0
-        for nodeid in nodeDict.keys():
-            nTransmitted += nodeDict[nodeid].packetsTransmitted
-            nRecvd += nodeDict[nodeid].packetsSuccessful
+        nTransmitted = sum(nodeDict[nodeid].packetsTransmitted for nodeid in nodeDict.keys())
+        nRecvd = sum(nodeDict[nodeid].packetsSuccessful for nodeid in nodeDict.keys())
         PacketReceptionRatio = nRecvd/nTransmitted
         filename = join(simu_dir, str('ratio_'+ fname) + '.csv')
         if os.path.isfile(filename):
             res = "\n" + str(PacketReceptionRatio)
         else:
             res = str(PacketReceptionRatio)
+        with open(filename, "a") as myfile:
+            myfile.write(res)
+        myfile.close()
+
+def saveEnergy(env, nodeDict, fname, simu_dir):
+    """ Save energy to file
+    Parameters
+    ----------
+    env : simpy environement
+        Simulation environment.
+    nodeDict:dict
+        list of nodes.
+    fname: string
+        file name structure
+    simu_dir: string
+        folder
+    Returns
+    -------
+    """
+    while True:
+        yield env.timeout(1e3 * 360000)
+        # compute and wirte energy consumption to file
+        V = 3.0     # voltage XXX
+        energy = sum(nodeDict[nodeid].packets[0].rectime * dBmTomW(nodeDict[nodeid].packets[0].pTX) * V 
+                    * nodeDict[nodeid].packetsTransmitted for nodeid in nodeDict.keys())/1e6
+        filename = join(simu_dir, str('energy_'+ fname) + '.csv')
+        if os.path.isfile(filename):
+            res = "\n" + str(energy)
+        else:
+            res = str(energy)
+        with open(filename, "a") as myfile:
+            myfile.write(res)
+        myfile.close()
+
+def saveTraffic(env, nodeDict, fname, simu_dir, sfSet, freqSet, lambda_i, lambda_e):
+    """ Save norm traffic and throughput to file
+    Parameters
+    ----------
+    env : simpy environement
+        Simulation environment.
+    nodeDict:dict
+        list of nodes.
+    fname: string
+        file name structure
+    simu_dir: string
+        folder
+    sfSet: list
+        set of possible sf
+    freqSet: list
+        set of possible freq
+    Returns
+    -------
+    """
+    while True:
+        yield env.timeout(1e3 * 360000)
+        # compute and wirte traffic and throughtput to file
+        # total_Ts = sum(nodeDict[nodeid].transmitTime for nodeid in nodeDict.keys())
+        Gsc = np.zeros((len(sfSet),len(freqSet)))
+        Tsc = np.zeros((len(sfSet),len(freqSet)))
+        Gsc += lambda_e
+
+        for nodeid in nodeDict.keys():
+            if nodeDict[nodeid].packets[0].sf != None:
+                if nodeDict[nodeid].packets[0].freq != None:
+                    si = sfSet.index(nodeDict[nodeid].packets[0].sf) 
+                    ci = freqSet.index((nodeDict[nodeid].packets[0].freq))
+                    Gsc[si, ci] += lambda_i
+        
+        for i in range(len(sfSet)):
+            Gsc[i, :] *= airtime((sfSet[i], nodeDict[0].packets[0].rdd, nodeDict[0].packets[0].bw, nodeDict[0].packets[0].packetLength, nodeDict[0].packets[0].preambleLength, nodeDict[0].packets[0].syncLength, nodeDict[0].packets[0].headerEnable, nodeDict[0].packets[0].crc))
+
+        for i in range(len(sfSet)):
+            for j in range(len(freqSet)):
+                Tsc[i][j] = Gsc[i][j] * np.exp(-2* Gsc[i][j]) 
+
+        filename = join(simu_dir, str('traffic_'+ fname) + '.csv')
+        if os.path.isfile(filename):
+            res = "\n" + str(sum(sum(Gsc))) + " " + str(sum(sum(Tsc)))
+        else:
+            res = str(sum(sum(Gsc))) + " " + str(sum(sum(Tsc)))
         with open(filename, "a") as myfile:
             myfile.write(res)
         myfile.close()
