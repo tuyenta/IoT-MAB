@@ -36,67 +36,67 @@ Example:
 python3 IoT_MAB.py --nrNodes 5 --nrIntNodes 5 --nrBS 1 --initial UNIFORM --radius 2000 --AvgSendTime 360000 --horizonTime 10  --packetLength 50 --freqSet '867300' --sfSet '7 8'  --powerSet "14"  --captureEffect 1  --interSFInterference 1 --infoMode NO --logdir logs --exp_name exp1
 ```
 ### Description
-nrNodes
+**nrNodes**
 
 number of nodes to simulate.
 
-nrIntNodes
+**nrIntNodes**
 
 number of smart nodes to simulate. nrIntNodes must be smaller than nrNodes
 
-nrBS
+**nrBS**
 
 number of base station.
 
-initial
+**initial**
 
 initial probability for learning process, which is *UNIFORM* for uniform distribution or *RANDOM* for random distribution.
 
-radius
+**radius**
 
 radius to simulate in metre.
 
-AvgSendTime
+**AvgSendTime**
 
 average sending interval in milliseconds.
 
-horizonTime
+**horizonTime**
 
 number of iteration to simulate. The simulation time is **horizonTime x AvgSendTime**
 
-packetLength
+**packetLength**
 
 length of packet to simulate in bytes
 
-sfSet
+**sfSet**
 
 set of SF to simulate, must be between 7 and 12
 
-freqSet
+**freqSet**
 
 set of frequency to simulate.
 
-powerSet
+**powerSet**
 
 set of power to simulate.
 
-captureEffect
+**captureEffect**
 
 capture effect (power collision) or not.
 
-interSFInterference
+**interSFInterference**
 
 inter-sf interference.
 
-infoMode
+**infoMode**
 
 information mode to simulate.
 
-logdir
+**logdir**
 
 name of folder to store simulations.
 
-exp_name
+**exp_name**
 
 name of folder to store scenario.
 
@@ -105,3 +105,6 @@ name of folder to store scenario.
 The result of every simulation run will be appended to a file named prob..._X.csv, whereby prob..._X. The data file is then plotted into .png file by using matplotlib.
 
 ## Changelogs
+
+## Contact
+ta@lri.fr
