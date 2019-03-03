@@ -196,26 +196,27 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
     probDict = {}
     PacketReceptionRatio = {}
 
-    for nodeid in range(nrIntNodes):
-        filename = join(simu_dir, str('prob_'+ fname) + '_id_' + str(nodeid) + '.csv')
-        df = pd.read_csv(filename, delimiter=' ', header= None, index_col=False)
-        df = df.replace(',', '', regex=True).astype('float64').values
+    if nrIntNodes!=0:
+        for nodeid in range(nrIntNodes):
+            filename = join(simu_dir, str('prob_'+ fname) + '_id_' + str(nodeid) + '.csv')
+            df = pd.read_csv(filename, delimiter=' ', header= None, index_col=False)
+            df = df.replace(',', '', regex=True).astype('float64').values
 
-        fig, ax = plt.subplots(figsize=(8,5))
-        for idx in range(df.shape[1]):
-            ax.plot(df[:,idx], label = 'SF = {}, Freq={}, Power={}'.format(setActions[idx][0], setActions[idx][1], setActions[idx][2]))
-            plt.xlabel("Horizon time")
-            plt.ylabel("Probability")
-            ax.legend(loc='best')   
-            plt.rcParams["font.family"] = "sans-serif"
-            plt.rcParams["font.size"] = 16
-            plt.close(fig)
-        # save to file
-        fig.savefig(join(simu_dir, str(fname) + '_id_' + str(nodeid) + '.png'))
-        # probDict
-        probDict[nodeid] = df[-1 , :]
-    
-    # save probDict and packet reception ratio     
-    np.save(join(simu_dir, str('prob_'+ fname)), probDict)
+            fig, ax = plt.subplots(figsize=(8,5))
+            for idx in range(df.shape[1]):
+                ax.plot(df[:,idx], label = 'SF = {}, Freq={}, Power={}'.format(setActions[idx][0], setActions[idx][1], setActions[idx][2]))
+                plt.xlabel("Horizon time")
+                plt.ylabel("Probability")
+                ax.legend(loc='best')   
+                plt.rcParams["font.family"] = "sans-serif"
+                plt.rcParams["font.size"] = 16
+                plt.close(fig)
+            # save to file
+            fig.savefig(join(simu_dir, str(fname) + '_id_' + str(nodeid) + '.png'))
+            # probDict
+            probDict[nodeid] = df[-1 , :]
+        
+        # save probDict and packet reception ratio     
+        np.save(join(simu_dir, str('prob_'+ fname)), probDict)
     
     return(bsDict, nodeDict)
