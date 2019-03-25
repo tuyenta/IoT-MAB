@@ -304,7 +304,7 @@ def placeRandomly(number, locArray, xRange, yRange):
         
 
 def placeRandomlyInRange(number, nrIntNodes, locArray, xRange, yRange, refLoc, bestValue,
-                         radius, transmitParams, maxPtx, avgSendTime):
+                         radius, transmitParams, maxPtx):
     """ Place node randomly in a range
     Parameters
     ----------
@@ -326,8 +326,6 @@ def placeRandomlyInRange(number, nrIntNodes, locArray, xRange, yRange, refLoc, b
         Transmission params
     maxPtx: float
         Maximum transmission value
-    avgSendTime: float
-        packet period   
     Returns
     -------
     locArray: array
@@ -343,7 +341,7 @@ def placeRandomlyInRange(number, nrIntNodes, locArray, xRange, yRange, refLoc, b
             bestDist, bestSF, bestBW = bestValue
 
             if np.any(np.sum(np.square(refLoc[:,1:3] - np.array([x,y]).reshape(1,2)), axis=1) <= radius**2):
-                locArray[n,:] = [n, x, y, bestSF, rdd, bestBW, packetLength, preambleLength, syncLength, headerEnable, crc, maxPtx, avgSendTime, 0]
+                locArray[n,:] = [n, x, y, bestSF, rdd, bestBW, packetLength, preambleLength, syncLength, headerEnable, crc, maxPtx, 0, 0]
                 break
 
 def airtime(phyParams):
@@ -371,7 +369,7 @@ def airtime(phyParams):
     Tpream + Tpayload: float
         The time on air of a packer in second.
     """
-    DE = 0       # low data rate optimization enabled (=1) or not (=0)
+    DE = 1       # low data rate optimization enabled (=1) or not (=0)
     sf, rdd, bw, packetLength, preabmleLength, syncLength, headerEnable, crc = phyParams
 #    if bw == 125 and sf in [11, 12]:
 #        # low data rate optimization mandated for BW125 with SF11 and SF12

@@ -45,11 +45,11 @@ def transmitPacket(env, node, bsDict, logDistParams):
             bsDict[bsid].addPacket(node.nodeid, node.packets[bsid])
             bsDict[bsid].resetACK()
         
-        #print("Start transmitting packet at t= {}".format(int(1+env.now/(6*60*1000))) + " from node {}".format(node.nodeid))
-        #print(node.prob)
-        #print(node.weight)
-        #for pkid in bsDict[bsid].packets.keys():    
-        #    print(pkid, bsDict[bsid].packets[pkid].sf, bsDict[bsid].packets[pkid].freq, bsDict[bsid].packets[pkid].pTX)                   
+        # print("Start transmitting packet at t= {}".format(int(1+env.now/(node.period))) + " from node {}".format(node.nodeid))
+        # print(node.prob)
+        # print(node.weight)
+        # for pkid in bsDict[bsid].packets.keys():    
+        #     print(pkid, bsDict[bsid].packets[pkid].sf, bsDict[bsid].packets[pkid].freq, bsDict[bsid].packets[pkid].pTX)                   
         
         # wait until critical section starts
         Tcritical = (2**node.packets[0].sf/node.packets[0].bw)*(node.packets[0].preambleLength - 5) # time until the start of the critical section
@@ -77,6 +77,7 @@ def transmitPacket(env, node, bsDict, logDistParams):
                 
         # update probability        
         node.packetsTransmitted += 1
+        node.energy += node.packets[0].rectime * dBmTomW(node.packets[0].pTX) * (3.0) /1e6 # V = 3.0     # voltage XXX
         if successfulRx:
             if node.info_mode in ["NO", "PARTIAL"]:
                 node.packetsSuccessful += 1
@@ -92,6 +93,7 @@ def transmitPacket(env, node, bsDict, logDistParams):
         # wait to next period
         yield env.timeout(float(node.period)-Tcritical-Trest-ACKrest)
         #input()
+
 def cuckooClock(env):
     """ Notifies the simulation time.
     Parameters
@@ -102,8 +104,8 @@ def cuckooClock(env):
     -------
     """
     while True:
-        yield env.timeout(1e3 * 3600000)
-        print("Running {} kHrs".format(env.now/(1e3 * 3600000)))
+        yield env.timeout(1000 * 3600000)
+        print("Running {} kHrs".format(env.now/(1000 * 3600000)))
 
 def saveProb(env, nodeDict, fname, simu_dir):
     """ Save probabilities every to file
@@ -121,10 +123,10 @@ def saveProb(env, nodeDict, fname, simu_dir):
     -------
     """
     while True:
-        yield env.timeout(360000)
+        yield env.timeout(100 * 3600000)
         # write prob to file
         for nodeid in nodeDict.keys():
-             if nodeDict[nodeid].node_mode == "SMART":
+             if nodeDict[nodeid].node_mode != "UNIFORM":
                 filename = join(simu_dir, str('prob_'+ fname) + '_id_' + str(nodeid) + '.csv')
                 save = str(list(nodeDict[nodeid].prob.values()))[1:-1]
                 if os.path.isfile(filename):
@@ -151,7 +153,7 @@ def saveRatio(env, nodeDict, fname, simu_dir):
     -------
     """
     while True:
-        yield env.timeout(1e3 * 360000)
+        yield env.timeout(100 * 3600000)
         # write packet reception ratio to file
         nTransmitted = 0
         nRecvd = 0
@@ -184,16 +186,16 @@ def saveEnergy(env, nodeDict, fname, simu_dir):
     -------
     """
     while True:
-        yield env.timeout(1e3 * 360000)
+        yield env.timeout(100 * 3600000)
         # compute and wirte energy consumption to file
-        V = 3.0     # voltage XXX
-        energy = sum(nodeDict[nodeid].packets[0].rectime * dBmTomW(nodeDict[nodeid].packets[0].pTX) * V 
-                    * nodeDict[nodeid].packetsTransmitted for nodeid in nodeDict.keys())/1e6
+        totalEnergy = sum(nodeDict[nodeid].energy for nodeid in nodeDict.keys())
+        nTransmitted = sum(nodeDict[nodeid].packetsTransmitted for nodeid in nodeDict.keys())
+        nRecvd = sum(nodeDict[nodeid].packetsSuccessful for nodeid in nodeDict.keys())
         filename = join(simu_dir, str('energy_'+ fname) + '.csv')
         if os.path.isfile(filename):
-            res = "\n" + str(energy)
+            res = "\n" + str(totalEnergy) + " " + str(nTransmitted) + " " + str(nRecvd)
         else:
-            res = str(energy)
+            res = str(totalEnergy) + " " + str(nTransmitted) + " " + str(nRecvd)
         with open(filename, "a") as myfile:
             myfile.write(res)
         myfile.close()
@@ -218,7 +220,7 @@ def saveTraffic(env, nodeDict, fname, simu_dir, sfSet, freqSet, lambda_i, lambda
     -------
     """
     while True:
-        yield env.timeout(1e3 * 360000)
+        yield env.timeout(100 * 3600000)
         # compute and wirte traffic and throughtput to file
         # total_Ts = sum(nodeDict[nodeid].transmitTime for nodeid in nodeDict.keys())
         Gsc = np.zeros((len(sfSet),len(freqSet)))

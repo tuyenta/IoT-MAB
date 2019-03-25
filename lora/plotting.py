@@ -31,7 +31,7 @@ def label(xy, text):
     Returns
     -------
     """
-    y = xy[1] - 30  # shift y-value for label so that it's below the artist
+    y = xy[1] + 30  # shift y-value for label so that it's below the artist
     plt.text(xy[0], y, text, ha="center", family='sans-serif', size=10)
     
 def plotSensitivity(sensi):

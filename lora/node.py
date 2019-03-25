@@ -25,7 +25,7 @@ class myNode():
         self.nodeid = nodeid # id
         self.x, self.y = position # location
         if node_mode == 0:
-            self.node_mode = 'NORMAL'
+            self.node_mode = initial
         else:
             self.node_mode = "SMART"
         
@@ -76,7 +76,7 @@ class myNode():
         self.packetsTransmitted = 0
         self.packetsSuccessful = 0
         self.transmitTime = 0
-        
+        self.energy = 0
     def generateProximateBS(self, bsList, interferenceThreshold, logDistParams):
         """ Generate dictionary of base-stations in proximity.
         Parameters
@@ -190,11 +190,15 @@ class myNode():
             # update prob        
             for j in range(0, self.nrActions):
                 prob[j] = (1-self.learning_rate) * (weight[j]/sum(weight)) + (self.learning_rate/self.nrActions)
-            
-        # update dictionaries
+        elif self.node_mode == "RANDOM":
+            prob = np.random.rand(self.nrActions)
+            prob = prob/sum(prob)    
+        else:
+            prob = (1/self.nrActions) * np.ones(self.nrActions)
+        # trick: force the small value (<1/5000) to 0 and normalize
         prob = np.array(prob)
-        prob[prob<0.0001] = 0 # trick: force the small value (<1/10000) to 0 
-        prob = prob/sum(prob) # normalize
+        prob[prob<0.0002] = 0
+        prob = prob/sum(prob)
 
         self.weight = {x: weight[x] for x in range(0, self.nrActions)} 
         self.prob = {x: prob[x] for x in range(0, self.nrActions)}

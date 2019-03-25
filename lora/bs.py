@@ -97,8 +97,22 @@ class myBS():
         signalInBucket = np.dot(self.interactionMatrix, self.signalLevel[fbucket])
         for nodeid, pkt in self.packetsInBucket[fbucket].items():
             if not pkt.isLost and pkt.isCritical:
-                if (1 + self.captureThreshold)*(pkt.signalLevel[fbucket][pkt.sf - 7]) < signalInBucket[pkt.sf - 7]:
-                    pkt.isLost = True
+                if self.captureThreshold != 0:
+                    if (1 + self.captureThreshold)*(pkt.signalLevel[fbucket][pkt.sf - 7]) < self.captureThreshold * self.signalLevel[fbucket][pkt.sf - 7]:
+                        pkt.isLost = True # CE
+                    else:
+                        if (1 + self.captureThreshold)*(pkt.signalLevel[fbucket][pkt.sf - 7]) < signalInBucket[pkt.sf - 7]:
+                            pkt.isLost = True # InterSF
+                        else:
+                            if (pkt.signalLevel[fbucket][pkt.sf - 7]) < self.signalLevel[fbucket][pkt.sf - 7]:
+                                pkt.isCollision = True # collision
+                else:
+                    if pkt.signalLevel[fbucket][pkt.sf - 7] < self.signalLevel[fbucket][pkt.sf - 7]:
+                        pkt.isLost = True # collision
+                        pkt.isCollision = True # collision
+                    else:
+                        if pkt.signalLevel[fbucket][pkt.sf - 7] < signalInBucket[pkt.sf - 7]:
+                            pkt.isLost = True # interSF
 
     def makeCritical(self, nodeid):
         """ Packet from node enters critical section.
@@ -144,21 +158,42 @@ class myBS():
             lostFlag = False
             collisionFlag = False
             for fbucket in pkt.signalLevel.keys():
-                #print("Receiver power from node "+str(nodeid)+" is "+ str(pkt.signalLevel[fbucket][pkt.sf - 7]))
-                #print("Total power at bs is " + str(self.signalLevel[fbucket][pkt.sf - 7]))
+                # print("Receiver power from node "+str(nodeid)+" is "+ str(pkt.signalLevel[fbucket][pkt.sf - 7]))
+                # print("Total power at bs is " + str(self.signalLevel[fbucket][pkt.sf - 7]))
                 signalInBucket = np.dot(self.interactionMatrix[pkt.sf - 7].reshape(1,6), self.signalLevel[fbucket])
-
-                # packet is lost of not 
-                if (1 + self.captureThreshold)*(pkt.signalLevel[fbucket][pkt.sf - 7]) < signalInBucket:
-                    lostFlag = True
-                    #print("from node:" + str(pkt.signalLevel[fbucket][pkt.sf - 7]))
-                    #print("at BS:" + str(self.signalLevel[fbucket]))
-                    #print ("Packet from node "+ str(nodeid) +" is lost due to interSF interference or capture effect!")  
+                # print("Total power of signal in Frequency is " + str(signalInBucket))
+                # packet is lost of not due to capture effect and interSF collision
+                
+                # with Capture Effect
+                if self.captureThreshold !=0:
+                    # Capture effect
+                    if (1 + self.captureThreshold)*(pkt.signalLevel[fbucket][pkt.sf - 7]) < self.captureThreshold * self.signalLevel[fbucket][pkt.sf - 7]:
+                        lostFlag = True
+                        collisionFlag = True
+                        # print ("Packet from node "+ str(nodeid) +" is lost due to Capture effect!")  
+                    else:
+                        # interSF collision
+                        if (1 + self.captureThreshold)*(pkt.signalLevel[fbucket][pkt.sf - 7]) < signalInBucket:
+                            lostFlag = True
+                            # print ("Packet from node "+ str(nodeid) +" is lost due to InterSF collision!") 
+                        else:
+                            # packet received but collied
+                            if (pkt.signalLevel[fbucket][pkt.sf - 7]) < self.signalLevel[fbucket][pkt.sf - 7]:
+                                collisionFlag = True
+                                # print ("Packet from node "+ str(nodeid) +" is received but collied!")
+                
+                # without Capture effect
                 else:
                     # packet is collision or not
-                    if (pkt.signalLevel[fbucket][pkt.sf - 7]) < self.signalLevel[fbucket][pkt.sf - 7]:
+                    if pkt.signalLevel[fbucket][pkt.sf - 7] < self.signalLevel[fbucket][pkt.sf - 7]:
+                        lostFlag = True
                         collisionFlag = True
-                        #print ("Packet from node "+ str(nodeid) +" is received but collied!")
+                        # print ("Packet from node "+ str(nodeid) +" is lost due to collision (w/o Capture Effect)")  
+                    else:
+                        # interSF collision
+                        if pkt.signalLevel[fbucket][pkt.sf - 7] < signalInBucket:
+                            lostFlag = True
+                            # print ("Packet from node "+ str(nodeid) +" is lost due to InterSF collision (w/o Capture Effect)!") 
             return [not lostFlag, not collisionFlag]
 
     def removePacket(self, nodeid):
@@ -182,11 +217,6 @@ class myBS():
             self.signalLevel[fbucket] = self.signalLevel[fbucket] - pkt.signalLevel[fbucket]
             # rounding problem - float 64
             self.signalLevel[fbucket][self.signalLevel[fbucket]< 1e-27] = 0
-            # for i in range(len(self.signalLevel[fbucket])):
-            #    if self.signalLevel[fbucket][i] < 1e-27:
-            #        print(self.signalLevel[fbucket][i])
-            #        self.signalLevel[fbucket][i] = 0
-            
             foo = self.packetsInBucket[fbucket].pop(nodeid)
         foo = self.packets.pop(nodeid)
         return pkt.isCritical and not pkt.isLost

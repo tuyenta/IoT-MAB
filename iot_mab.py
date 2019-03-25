@@ -26,7 +26,8 @@ def main(args):
                 sfSet, freqSet, powSet, captureEffect, interSFInterference, info_mode)
     
     assert initial in ["UNIFORM", "RANDOM"], "Initial mode must be UNIFORM, RANDOM."
-    
+    assert info_mode in ["NO", "PARTIAL", "FULL"], "Initial mode must be NO, PARTIAL, or FULL."
+
     # running simulation
     bsDict, nodeDict = sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime,
     packetLength, sfSet, freqSet, powSet, captureEffect, interSFInterference, info_mode, logdir, exp_name)

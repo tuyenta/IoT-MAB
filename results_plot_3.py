@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Mar 11 13:59:16 2019
+
+@author: tuyenta
+"""
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from os.path import join
+
+# args
+nrNodes = int(100)
+nrIntNodes_list = [0, 50, 100]
+nrBS = int(1)
+initial = "RANDOM"
+radius = float(4500)
+avgSendTime = int(240000)
+horTime = int(1e7)
+packetLength = int(50)
+sfSet = [7, 8, 9, 10, 11, 12]
+freqSet = [868100] #[868100, 868300, 868500]
+powSet = [14] #[2, 5, 8, 11, 14]
+captureEffect_list = [True]
+interSFInterference_list = [True, False]
+info_mode = 'NO'
+
+#make folder
+exp_name_list = ['0node_RANDOM', '50nodes_RANDOM', '100nodes_RANDOM']
+logdir = 'Sim_1'
+fig1, ax1 = plt.subplots(figsize=(12,10))
+
+for idx in range(len(nrIntNodes_list)):
+    nrIntNodes = nrIntNodes_list[idx]
+    exp_name = exp_name_list[idx]
+    simu_dir = join(logdir, exp_name)
+
+    for captureEffect in captureEffect_list:
+        for interSFInterference in interSFInterference_list:
+            fname = str(nrIntNodes) +'_smartNodes_' + 'initial_' +str(initial) + '_infoMode_' + str(info_mode) + '_captureEffect_' + str(captureEffect) + '_interSFMode_' + str(interSFInterference)
+            filename_1 = join(simu_dir, str('ratio_'+ fname) + '.csv')
+            filename_2 = join(simu_dir, str('traffic_'+ fname) + '.csv')
+            filename_3 = join(simu_dir, str('energy_'+ fname) + '.csv')
+            df_1 = pd.read_csv(filename_1, delimiter=' ', header= None, index_col=False).astype('float64').values
+            df_2 = pd.read_csv(filename_2, delimiter=' ', header= None, index_col=False).astype('float64').values
+            df_3 = pd.read_csv(filename_3, delimiter=' ', header= None, index_col=False).astype('float64').values
+            if interSFInterference == 'False':
+                ax1.plot(df_1[:,0], "--", label = '{} nodes, Capture Effect={}, Inter-SF capture={}'.format(nrIntNodes, captureEffect, interSFInterference))
+            else:
+                ax1.plot(df_1[:,0], label = '{} nodes, Capture Effect={}, Inter-SF capture={}'.format(nrIntNodes, captureEffect, interSFInterference))
+#            if idx%2 == 0:
+#                ax1.plot(df_1[:,0], "--", label = '{} nodes, Capture Effect={}, Inter-SF capture={}, pTX=[14]'.format(nrIntNodes, captureEffect, interSFInterference))
+#            else:
+#                ax1.plot(df_1[:,0], label = '{} nodes, Capture Effect={}, Inter-SF capture={}, pTX=[2, 5, 8, 11, 14]'.format(nrIntNodes, captureEffect, interSFInterference))
+            plt.xlabel("Horizon time (x100 hours)")
+            plt.ylabel("Packet Reception Ratio")
+            plt.yticks(np.arange(1, 11)*0.1)
+            plt.xticks(np.arange(0, 7000, 1000))
+            ax1.legend(loc='best')   
+            plt.rcParams["font.family"] = "sans-serif"
+            plt.rcParams["font.size"] = 12

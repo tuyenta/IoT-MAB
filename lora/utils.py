@@ -13,12 +13,10 @@ from os.path import join, exists
 from os import makedirs
 import simpy
 import pandas as pd
-import matplotlib.pyplot as plt
 from .node import myNode
 from .bs import myBS
 from .bsFunctions import transmitPacket, cuckooClock, saveProb, saveRatio, saveEnergy, saveTraffic
 from .loratools import dBmTomW, getMaxTransmitDistance, placeRandomlyInRange, placeRandomly
-from .plotting import plotLocations
 
 def print_params(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packetLength, sfSet, freqSet, powSet, captureEffect, interSFInterference, info_mode):
     # print parametters
@@ -43,7 +41,7 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
     
     simtime = horTime * avgSendTime # simulation time in ms
 
-    grid = [10000, 10000] # maximum simulation area in m
+    grid = [int(10000), int(10000)] # maximum simulation area in m
     
     # Node parameters
     ackLength = 8 # length of the ack
@@ -64,8 +62,8 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
     nDemodulator = 8 # number of demodulators on base-station
     
     # sensitivity
-    sf7  = np.array([7, -124.5,-121.5,-118.5])
-    sf8  = np.array([8, -127.0,-124.0,-121.0])
+    sf7  = np.array([7, -123.0,-121.5,-118.5])
+    sf8  = np.array([8, -126.0,-124.0,-121.0])
     sf9  = np.array([9, -129.5,-126.5,-123.5])
     sf10 = np.array([10,-132.0,-129.0,-126.0])
     sf11 = np.array([11,-134.5,-131.5,-128.5])
@@ -78,19 +76,12 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
         captureThreshold = dBmTomW(6) # threshold is 6 dB
         if interSFInterference == True:
             interactionMatrix = np.array([
-                [dBmTomW(6), dBmTomW(-7), dBmTomW(-7), dBmTomW(-7), dBmTomW(-7), dBmTomW(-7)],
-                [dBmTomW(-10), dBmTomW(6), dBmTomW(-10), dBmTomW(-10), dBmTomW(-10), dBmTomW(-10)],
-                [dBmTomW(-12.5), dBmTomW(-12.5), dBmTomW(6), dBmTomW(-12.5), dBmTomW(-12.5), dBmTomW(-12.5)],
-                [dBmTomW(-15), dBmTomW(-15), dBmTomW(-15), dBmTomW(6), dBmTomW(-15), dBmTomW(-15)],
-                [dBmTomW(-17.5), dBmTomW(-17.5), dBmTomW(-17.5), dBmTomW(-17.5), dBmTomW(6), dBmTomW(-17.5)],
-                [dBmTomW(-20), dBmTomW(-20), dBmTomW(-20), dBmTomW(-20), dBmTomW(-20), dBmTomW(6)]])
-            # interactionMatrix = np.array([
-            #     [dBmTomW(6), dBmTomW(-16), dBmTomW(-18), dBmTomW(-19), dBmTomW(-19), dBmTomW(-20)],
-            #     [dBmTomW(-24), dBmTomW(6), dBmTomW(-20), dBmTomW(-22), dBmTomW(-22), dBmTomW(-22)],
-            #     [dBmTomW(-27), dBmTomW(-27), dBmTomW(6), dBmTomW(-23), dBmTomW(-25), dBmTomW(-25)],
-            #     [dBmTomW(-30), dBmTomW(-30), dBmTomW(-30), dBmTomW(6), dBmTomW(-26), dBmTomW(-28)],
-            #     [dBmTomW(-33), dBmTomW(-33), dBmTomW(-33), dBmTomW(-33), dBmTomW(6), dBmTomW(-29)],
-            #     [dBmTomW(-36), dBmTomW(-36), dBmTomW(-36), dBmTomW(-36), dBmTomW(-36), dBmTomW(6)]])
+                [dBmTomW(6),     dBmTomW(-7.5),  dBmTomW(-7.5), dBmTomW(-7.5),  dBmTomW(-7.5),  dBmTomW(-7.5)],
+                [dBmTomW(-9),    dBmTomW(6),     dBmTomW(-9),   dBmTomW(-9),    dBmTomW(-9),    dBmTomW(-9)],
+                [dBmTomW(-13.5), dBmTomW(-13.5), dBmTomW(6),    dBmTomW(-13.5), dBmTomW(-13.5), dBmTomW(-13.5)],
+                [dBmTomW(-15),   dBmTomW(-15),   dBmTomW(-15),  dBmTomW(6),     dBmTomW(-15),   dBmTomW(-15)],
+                [dBmTomW(-18),   dBmTomW(-18),   dBmTomW(-18),  dBmTomW(-18),   dBmTomW(6),     dBmTomW(-18)],
+                [dBmTomW(-22.5), dBmTomW(-22.5), dBmTomW(-22.5),dBmTomW(-22.5), dBmTomW(-22.5), dBmTomW(6)]])
         else:
             interactionMatrix = np.array([
                 [dBmTomW(6), 0,          0,             0,          0,          0         ],
@@ -100,8 +91,17 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
                 [0,          0         , 0,             0,          dBmTomW(6), 0         ],
                 [0,          0         , 0,             0,          0,          dBmTomW(6)]])
     else:
-        captureThreshold = 0 # threshold is 0
-        interactionMatrix = np.eye(len(sfSet), dtype=int)
+        captureThreshold = 0 # threshold is 0 dB
+        if interSFInterference == True:
+            interactionMatrix = np.array([
+                [0,              dBmTomW(-7.5),  dBmTomW(-7.5), dBmTomW(-7.5),  dBmTomW(-7.5),  dBmTomW(-7.5)],
+                [dBmTomW(-9),    0,              dBmTomW(-9),   dBmTomW(-9),    dBmTomW(-9),    dBmTomW(-9)],
+                [dBmTomW(-13.5), dBmTomW(-13.5), 0,             dBmTomW(-13.5), dBmTomW(-13.5), dBmTomW(-13.5)],
+                [dBmTomW(-15),   dBmTomW(-15),   dBmTomW(-15),  0,              dBmTomW(-15),   dBmTomW(-15)],
+                [dBmTomW(-18),   dBmTomW(-18),   dBmTomW(-18),  dBmTomW(-18),   0,              dBmTomW(-18)],
+                [dBmTomW(-22.5), dBmTomW(-22.5), dBmTomW(-22.5),dBmTomW(-22.5), dBmTomW(-22.5), 0           ]])
+        else:
+            interactionMatrix = np.eye(6, dtype=int)
     
     # Location generator
     print ("======= Generate/Load simulation scenario =======")
@@ -130,7 +130,7 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
             
             # Place nodes randomly
             nodeLoc = np.zeros((nrNodes, 14))
-            placeRandomlyInRange(nrNodes, nrIntNodes, nodeLoc, [0, grid[0]], [0, grid[1]], BSLoc, (bestDist, bestSF, bestBW), radius, phyParams, maxPtx, avgSendTime)
+            placeRandomlyInRange(nrNodes, nrIntNodes, nodeLoc, [0, grid[0]], [0, grid[1]], BSLoc, (bestDist, bestSF, bestBW), radius, phyParams, maxPtx)
             
             # save to file
             np.save(file_1, BSLoc)
@@ -148,12 +148,13 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
     BSList = BSLoc[0:nrBS,:]
     nodeList = nodeLoc[0:nrNodes,:]
     nodeList[0:nrIntNodes, -1] = 1 # Intelligent nodes
+    nodeList[0:nrNodes, -2] = avgSendTime # avgSendTime
     print ("=============== Setup parameters ================")
     print ("# base-stations = {}".format(nrBS))
     print ("# nodes = {}".format(nrNodes))
     
     # Plotting - location
-    plotLocations(BSLoc, nodeLoc, grid[0], grid[1], bestDist, distMatrix)
+    # plotLocations(BSLoc, nodeLoc, grid[0], grid[1], bestDist, distMatrix)
 
     env = simpy.Environment()
     env.process(cuckooClock(env))
@@ -174,8 +175,7 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
     # save results
     env.process(saveProb(env, nodeDict, fname, simu_dir))
     env.process(saveRatio(env, nodeDict, fname, simu_dir))
-    if len(powSet)>1:
-        env.process(saveEnergy(env, nodeDict, fname, simu_dir))
+    env.process(saveEnergy(env, nodeDict, fname, simu_dir))
     env.process(saveTraffic(env, nodeDict, fname, simu_dir, sfSet, freqSet, lambda_i, lambda_e))
     
     env.run(until=simtime)
@@ -191,32 +191,33 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
     print ("# Received = {}".format(nRecvd))
     print ("# Ratio = {}".format(PacketReceptionRatio))
 
-    # save and plot data
-    setActions = [(sfSet[i], freqSet[j], powSet[k]) for i in range(len(sfSet)) for j in range(len(freqSet)) for k in range(len(powSet))]
-    probDict = {}
-    PacketReceptionRatio = {}
+    # # save and plot data
+    # setActions = [(sfSet[i], freqSet[j], powSet[k]) for i in range(len(sfSet)) for j in range(len(freqSet)) for k in range(len(powSet))]
+    # probDict = {}
+    # PacketReceptionRatio = {}
 
-    if nrIntNodes!=0:
-        for nodeid in range(nrIntNodes):
-            filename = join(simu_dir, str('prob_'+ fname) + '_id_' + str(nodeid) + '.csv')
-            df = pd.read_csv(filename, delimiter=' ', header= None, index_col=False)
-            df = df.replace(',', '', regex=True).astype('float64').values
+    # if nrIntNodes!=0:
+    #     for nodeid in range(nrIntNodes):
+    #         filename = join(simu_dir, str('prob_'+ fname) + '_id_' + str(nodeid) + '.csv')
+    #         df = pd.read_csv(filename, delimiter=' ', header= None, index_col=False)
+    #         df = df.replace(',', '', regex=True).astype('float64').values
 
-            fig, ax = plt.subplots(figsize=(8,5))
-            for idx in range(df.shape[1]):
-                ax.plot(df[:,idx], label = 'SF = {}, Freq={}, Power={}'.format(setActions[idx][0], setActions[idx][1], setActions[idx][2]))
-                plt.xlabel("Horizon time")
-                plt.ylabel("Probability")
-                ax.legend(loc='best')   
-                plt.rcParams["font.family"] = "sans-serif"
-                plt.rcParams["font.size"] = 16
-                plt.close(fig)
-            # save to file
-            fig.savefig(join(simu_dir, str(fname) + '_id_' + str(nodeid) + '.png'))
-            # probDict
-            probDict[nodeid] = df[-1 , :]
+    #         # fig, ax = plt.subplots(figsize=(8,5))
+    #         # for idx in range(df.shape[1]):
+    #         #     ax.plot(df[:,idx], label = 'SF = {}, Freq={}, Power={}'.format(setActions[idx][0], setActions[idx][1], setActions[idx][2]))
+    #         #     plt.xlabel("Horizon time")
+    #         #     plt.ylabel("Probability")
+    #         #     ax.legend(loc='best')   
+    #         #     plt.rcParams["font.family"] = "sans-serif"
+    #         #     plt.rcParams["font.size"] = 12
+    #         #     plt.close(fig)
+    #         # # save to file
+    #         # fig.savefig(join(simu_dir, str(fname) + '_id_' + str(nodeid) + '.png'))
+            
+    #         # probDict
+    #         probDict[nodeid] = df[-1 , :]
         
-        # save probDict and packet reception ratio     
-        np.save(join(simu_dir, str('prob_'+ fname)), probDict)
+    #     # save probDict and packet reception ratio     
+    #     np.save(join(simu_dir, str('prob_'+ fname)), probDict)
     
     return(bsDict, nodeDict)
