@@ -7,7 +7,7 @@ Utilities (:mod:`lora.parse`)
    get_args                 -- Get the simulation's arguments
 """    
 import argparse
-import argload
+#import argload
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -16,6 +16,7 @@ def get_args():
     parser.add_argument("--nrBS", required=True, type=int, default=1)
     parser.add_argument("--initial", required=True, type=str)
     parser.add_argument("--radius", required=True, type=float, default=2)
+    parser.add_argument("--distribution", required=True)
     parser.add_argument("--AvgSendTime", required=True, type=int, default=6)
     parser.add_argument("--horizonTime", required=True, type=int, default=10**6)
     parser.add_argument("--packetLength", required=True, type=int, default=50)
@@ -25,6 +26,7 @@ def get_args():
     parser.add_argument("--captureEffect", required=True, type=int)
     parser.add_argument("--interSFInterference", required=True, type=int)
     parser.add_argument("--infoMode", required=True, type=str)
+    parser.add_argument("--Algo", required=True, type=str)
     parser.add_argument("--logdir", required=True, type=str)
     parser.add_argument("--exp_name", required=True, type=str)
     

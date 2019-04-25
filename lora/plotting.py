@@ -16,6 +16,7 @@ With some codes from extended LoRaSim library: https://github.com/adwaitnd/loras
 from numpy import zeros
 import matplotlib.pyplot as plt
 from .loratools import airtime
+from matplotlib.lines import Line2D
 
 __all__ = ['label', 'plotSensitivity', 'plotAirtime', 'plotLocations', 'plotMaxDistFig']
 
@@ -120,19 +121,22 @@ def plotLocations(BSLoc, nodeLoc, maxX, maxY, bestDist, distMatrix):
     fig, loc_plot = plt.subplots(figsize=(12,12))
     loc_ax = plt.gca()
     color = ['gray', 'gray', 'gray', 'gray', 'gray', 'gray']
+    #legend_elements = [Line2D([0], [0],marker='o', color='w', label='Normal end-device'     , markerfacecolor='g', markersize=15),
+    #                   Line2D([0], [0],marker='s', color='w', label='Inteligent end-device' , markerfacecolor='b', markersize=15),
+    #                   Line2D([0], [0],marker='^', color='w', label='Gateway'               , markerfacecolor='c', markersize=15)]
     for b in BSLoc[:,1:3]:
         # draw the circle for each SF
         for i in range(len(distMatrix)):
            loc_ax.add_artist(plt.Circle((b[0], b[1]), distMatrix[i], fill=False, hatch=None, color = color[i])) 
     for i in range(0,len(nodeLoc)):
         if nodeLoc[i,13] == 0:
-            nodePoints = loc_plot.plot(nodeLoc[i,1], nodeLoc[i,2], "b.", mfc='none') # , label="normal node")
+            nodePoints = loc_plot.plot(nodeLoc[i,1], nodeLoc[i,2], "ro", mfc='none', label="Normal end-device") # , label="normal node")
         else:
-            nodePoints = loc_plot.plot(nodeLoc[i,1], nodeLoc[i,2], "r.", mfc='none') #, label="intelligent node")
+            nodePoints = loc_plot.plot(nodeLoc[i,1], nodeLoc[i,2], "ro", mfc='none', label="Inteligent end-device") #, label="intelligent node")
     for i in range(0,len(nodeLoc)):
         label((nodeLoc[i, 1], nodeLoc[i, 2]), str(i))
     
-    bsPoints = loc_plot.plot(BSLoc[:,1], BSLoc[:,2], "c^", label="base station")
+    bsPoints = loc_plot.plot(BSLoc[:,1], BSLoc[:,2], "^", label="gateway")
     
     # more nodes/BSs
     #nodePoints1, = plt.plot(nodeLoc[0:(nrNodes/2),1], nodeLoc[0:(nrNodes/2),2], "b.", mfc='none', label="Network 0\nEnd Device")
@@ -144,7 +148,7 @@ def plotLocations(BSLoc, nodeLoc, maxX, maxY, bestDist, distMatrix):
     plt.yticks([0, 5000, 10000, 15000, 20000], [0,5,10,15,20])
     
     
-    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+#    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.grid()
     
     plt.axis('equal')

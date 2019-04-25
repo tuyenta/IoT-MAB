@@ -14,7 +14,7 @@ import numpy as np
 from os.path import join
 from .loratools import airtime, dBmTomW
 # Transmit
-def transmitPacket(env, node, bsDict, logDistParams):
+def transmitPacket(env, node, bsDict, logDistParams, algo):
     """ Transmit a packet from node to all BSs in the list.
     Parameters
     ----------
@@ -26,6 +26,8 @@ def transmitPacket(env, node, bsDict, logDistParams):
         list of BSs.
     logDistParams: list
         channel params
+    algo: string
+        learning algorithm
     Returns
     -------
     """
@@ -86,7 +88,7 @@ def transmitPacket(env, node, bsDict, logDistParams):
                 if not node.ack[0].isCollision:
                     node.packetsSuccessful += 1
                     node.transmitTime += node.packets[0].rectime
-            node.updateProb()
+            node.updateProb(algo)
         #print("Probability of action from node " +str(node.nodeid)+ " at (t+1)= {}".format(int(1+env.now/(6*60*1000))))
         #print(node.prob)
         #print(node.weight)

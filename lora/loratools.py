@@ -304,7 +304,7 @@ def placeRandomly(number, locArray, xRange, yRange):
         
 
 def placeRandomlyInRange(number, nrIntNodes, locArray, xRange, yRange, refLoc, bestValue,
-                         radius, transmitParams, maxPtx):
+                         radius, transmitParams, maxPtx, distribution, distMatrix):
     """ Place node randomly in a range
     Parameters
     ----------
@@ -326,23 +326,39 @@ def placeRandomlyInRange(number, nrIntNodes, locArray, xRange, yRange, refLoc, b
         Transmission params
     maxPtx: float
         Maximum transmission value
+    distribution: list
+        Distribution of nodes
+    distMatrix: matrix
+        Matrix of distance sperated by SF and BW
     Returns
     -------
     locArray: array
         Location array.
     """
-    for n in range(number):
-        while True:
-            # This could technically turn into an infinite loop but that shouldn't ever practically happen.
-            # add check here later
-            x = random.uniform(xRange[0], xRange[1])
-            y = random.uniform(yRange[0], yRange[1])
-            rdd, packetLength, preambleLength, syncLength, headerEnable, crc = transmitParams
-            bestDist, bestSF, bestBW = bestValue
-
-            if np.any(np.sum(np.square(refLoc[:,1:3] - np.array([x,y]).reshape(1,2)), axis=1) <= radius**2):
-                locArray[n,:] = [n, x, y, bestSF, rdd, bestBW, packetLength, preambleLength, syncLength, headerEnable, crc, maxPtx, 0, 0]
-                break
+    temp = 0
+    for idx in range(len(distribution)):
+        number_nodes = int(number * distribution[idx])
+        for n in range(number_nodes):
+            while True:
+                # This could technically turn into an infinite loop but that shouldn't ever practically happen.
+                # add check here later
+                x = random.uniform(xRange[0], xRange[1])
+                y = random.uniform(yRange[0], yRange[1])
+                #print(x, y)
+                rdd, packetLength, preambleLength, syncLength, headerEnable, crc = transmitParams
+                bestDist, bestSF, bestBW = bestValue
+                if idx == 0:
+                    if np.any(np.sum(np.square(refLoc[:,1:3] - np.array([x,y]).reshape(1,2)), axis=1) <= radius**2):
+                        if np.any(np.sum(np.square(refLoc[:,1:3] - np.array([x,y]).reshape(1,2)), axis=1) <= distMatrix[idx]**2):
+                            locArray[n+temp,:] = [n+temp, x, y, bestSF, rdd, bestBW, packetLength, preambleLength, syncLength, headerEnable, crc, maxPtx, 0, 0]
+                            break
+                else:
+                    if np.any(np.sum(np.square(refLoc[:,1:3] - np.array([x,y]).reshape(1,2)), axis=1) <= radius**2):
+                        if np.any(np.sum(np.square(refLoc[:,1:3] - np.array([x,y]).reshape(1,2)), axis=1) <= distMatrix[idx]**2):
+                            if np.any(np.sum(np.square(refLoc[:,1:3] - np.array([x,y]).reshape(1,2)), axis=1) >= distMatrix[idx-1]**2):
+                                locArray[n+temp,:] = [n+temp, x, y, bestSF, rdd, bestBW, packetLength, preambleLength, syncLength, headerEnable, crc, maxPtx, 0, 0]
+                                break
+        temp += number_nodes
 
 def airtime(phyParams):
     """ Computes the airtime of a packet in second.

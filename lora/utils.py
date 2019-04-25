@@ -12,13 +12,13 @@ import numpy as np
 from os.path import join, exists
 from os import makedirs
 import simpy
-import pandas as pd
 from .node import myNode
 from .bs import myBS
 from .bsFunctions import transmitPacket, cuckooClock, saveProb, saveRatio, saveEnergy, saveTraffic
 from .loratools import dBmTomW, getMaxTransmitDistance, placeRandomlyInRange, placeRandomly
+from .plotting import plotLocations
 
-def print_params(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packetLength, sfSet, freqSet, powSet, captureEffect, interSFInterference, info_mode):
+def print_params(nrNodes, nrIntNodes, nrBS, initial, radius, distribution, avgSendTime, horTime, packetLength, sfSet, freqSet, powSet, captureEffect, interSFInterference, info_mode, algo):
     # print parametters
     print("Simulation Parameters:")
     print ("\t Nodes:",nrNodes)
@@ -26,6 +26,7 @@ def print_params(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTim
     print("\t BS:",nrBS)
     print("\t Initial mode:",initial)
     print("\t Radius:", radius)
+    print("\t Region Distribution:", distribution)
     print ("\t AvgSendTime (exp. distributed):",avgSendTime)
     print ("\t Horizon Time:",horTime)
     print("\t Packet lengths:",packetLength)
@@ -35,9 +36,10 @@ def print_params(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTim
     print ("\t Capture Effect:",captureEffect)
     print ("\t Inter-SF Interference:",interSFInterference)
     print ("\t Information mode:",info_mode)
+    print ("\t Learning algorithm:", algo)
         
-def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packetLength, sfSet, freqSet, 
-        powSet, captureEffect, interSFInterference, info_mode, logdir, exp_name) :
+def sim(nrNodes, nrIntNodes, nrBS, initial, radius, distribution, avgSendTime, horTime, packetLength, sfSet, freqSet, 
+        powSet, captureEffect, interSFInterference, info_mode, algo, logdir, exp_name) :
     
     simtime = horTime * avgSendTime # simulation time in ms
 
@@ -109,7 +111,7 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
     print ("Max range = {} at SF = {}, BW = {}".format(bestDist, bestSF, bestBW))
 
     # Generate base station and nodes
-    np.random.seed(12345) # seed the random generator
+    np.random.seed(42) # seed the random generator
     
     # Place base-stations randomly
     simu_dir = join(logdir, exp_name)
@@ -130,7 +132,7 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
             
             # Place nodes randomly
             nodeLoc = np.zeros((nrNodes, 14))
-            placeRandomlyInRange(nrNodes, nrIntNodes, nodeLoc, [0, grid[0]], [0, grid[1]], BSLoc, (bestDist, bestSF, bestBW), radius, phyParams, maxPtx)
+            placeRandomlyInRange(nrNodes, nrIntNodes, nodeLoc, [0, grid[0]], [0, grid[1]], BSLoc, (bestDist, bestSF, bestBW), radius, phyParams, maxPtx, distribution, distMatrix)
             
             # save to file
             np.save(file_1, BSLoc)
@@ -154,7 +156,7 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
     print ("# nodes = {}".format(nrNodes))
     
     # Plotting - location
-    # plotLocations(BSLoc, nodeLoc, grid[0], grid[1], bestDist, distMatrix)
+    plotLocations(BSLoc, nodeLoc, grid[0], grid[1], bestDist, distMatrix)
 
     env = simpy.Environment()
     env.process(cuckooClock(env))
@@ -168,9 +170,9 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
     nodeDict = {} # setup empty dictionary for nodes
     for elem in nodeList:
         node = myNode(int(elem[0]), (elem[1], elem[2]), elem[3:13], initial, sfSet, freqSet, powSet, 
-                    BSList, interferenceThreshold, logDistParams, sensi, elem[13], info_mode, horTime, simu_dir, fname)
+                    BSList, interferenceThreshold, logDistParams, sensi, elem[13], info_mode, horTime, algo, simu_dir, fname)
         nodeDict[node.nodeid] = node
-        env.process(transmitPacket(env, node, bsDict, logDistParams))
+        env.process(transmitPacket(env, node, bsDict, logDistParams, algo))
     
     # save results
     env.process(saveProb(env, nodeDict, fname, simu_dir))
@@ -190,34 +192,5 @@ def sim(nrNodes, nrIntNodes, nrBS, initial, radius, avgSendTime, horTime, packet
     print ("# Transmitted = {}".format(nTransmitted))
     print ("# Received = {}".format(nRecvd))
     print ("# Ratio = {}".format(PacketReceptionRatio))
-
-    # # save and plot data
-    # setActions = [(sfSet[i], freqSet[j], powSet[k]) for i in range(len(sfSet)) for j in range(len(freqSet)) for k in range(len(powSet))]
-    # probDict = {}
-    # PacketReceptionRatio = {}
-
-    # if nrIntNodes!=0:
-    #     for nodeid in range(nrIntNodes):
-    #         filename = join(simu_dir, str('prob_'+ fname) + '_id_' + str(nodeid) + '.csv')
-    #         df = pd.read_csv(filename, delimiter=' ', header= None, index_col=False)
-    #         df = df.replace(',', '', regex=True).astype('float64').values
-
-    #         # fig, ax = plt.subplots(figsize=(8,5))
-    #         # for idx in range(df.shape[1]):
-    #         #     ax.plot(df[:,idx], label = 'SF = {}, Freq={}, Power={}'.format(setActions[idx][0], setActions[idx][1], setActions[idx][2]))
-    #         #     plt.xlabel("Horizon time")
-    #         #     plt.ylabel("Probability")
-    #         #     ax.legend(loc='best')   
-    #         #     plt.rcParams["font.family"] = "sans-serif"
-    #         #     plt.rcParams["font.size"] = 12
-    #         #     plt.close(fig)
-    #         # # save to file
-    #         # fig.savefig(join(simu_dir, str(fname) + '_id_' + str(nodeid) + '.png'))
-            
-    #         # probDict
-    #         probDict[nodeid] = df[-1 , :]
-        
-    #     # save probDict and packet reception ratio     
-    #     np.save(join(simu_dir, str('prob_'+ fname)), probDict)
     
     return(bsDict, nodeDict)
