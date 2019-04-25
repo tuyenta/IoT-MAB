@@ -3,6 +3,15 @@
 ## Introduction
 IoT-MAB is a discrete-event simulator based on SimPy for simulating intelligent distributed resource allocation in LoRa networks and to analyse scalability. We also combine the classed and functions for Physical layer of LoRA. 
 
+## How to cite?
+```latex
+@misc{LoRa_MAB,
+author =   {Duc-Tuyen Ta, Kinda Khawam, Samer Lahoud},
+title =    {{LoRaWAN Network Simulator with Reinforcement Learning-based Algorithms}},
+howpublished = {\url{https://github.com/tuyenta/IoT-MAB}},
+}
+```
+
 ## Installation
 It is recommend to use virtualenv to keep your Python environment isolated, together with virtualenvwrapper to make working with virtual environments much more pleasant, e.g.:
 
@@ -26,14 +35,14 @@ You can install the required packages using the provided requirements.txt file:
 ### Synopsis
 
 ```python
-python3 IoT_MAB.py <nrNodes> <nrIntNodes> <nrBS> <initial> <radius> <AvgSendTime> <horizonTime>
+python3 IoT_MAB.py <nrNodes> <nrIntNodes> <nrBS> <initial> <radius> <distribution> <AvgSendTime> <horizonTime>
 <packetLength> <freqSet> <sfSet> <powerSet> <captureEffect> <interSFInterference> <infoMode> <logdir> <exp_name>
 ```
 
 Example:
 
 ```python
-python3 IoT_MAB.py --nrNodes 5 --nrIntNodes 5 --nrBS 1 --initial UNIFORM --radius 2000 --AvgSendTime 360000 --horizonTime 10  --packetLength 50 --freqSet '867300' --sfSet '7 8'  --powerSet "14"  --captureEffect 1  --interSFInterference 1 --infoMode NO --logdir logs --exp_name exp1
+python3 IoT_MAB.py --nrNodes 5 --nrIntNodes 5 --nrBS 1 --initial UNIFORM --radius 2000 --distribution '0.1 0.1 0.3 0.4 0.05 0.05' --AvgSendTime 360000 --horizonTime 10  --packetLength 50 --freqSet '867300' --sfSet '7 8'  --powerSet "14"  --captureEffect 1  --interSFInterference 1 --infoMode NO --logdir logs --exp_name exp1
 ```
 ### Description
 **nrNodes**
@@ -55,6 +64,10 @@ initial probability for learning process, which is *UNIFORM* for uniform distrib
 **radius**
 
 radius to simulate in metre.
+
+**distribution**
+
+distribution of end-devices in the network
 
 **AvgSendTime**
 
@@ -102,9 +115,33 @@ name of folder to store scenario.
 
 ### Output
 
-The result of every simulation run will be appended to a file named prob..._X.csv, whereby prob..._X. The data file is then plotted into .png file by using matplotlib.
+The result of every simulation run will be appended to a file named prob..._X.csv, ratio....csv, energy....csv and traffic....csv, whereby
+
+* prob..._X is the probability of device X.
+
+* ratio... is the packet reception ration of the network.
+
+* energy... is the energy consumption of the network.
+
+* traffic... is the normalized traffic and normalized throughput of the network.
+
+The data file is then plotted into .png file by using matplotlib.
 
 ## Changelogs
 
 ## Contact
+**Duc-Tuyen Ta**
+
+Postdoc, ROCS, LRI, Paris-Sud University.
 ta@lri.fr
+
+**Kinda Khawam**
+
+Associate Professor at the University of Versailles.
+Associated to the ROCS team in LRI, Paris-Sud University.
+kinda.khawam@gmail.com
+
+**Samer Lahoud**
+
+Faculté d’ingénierie ESIB, Université Saint-Joseph de Beyrouth, Lebanon
+samer.lahoud@usj.edu.lb
